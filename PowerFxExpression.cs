@@ -3,6 +3,8 @@ using Microsoft.PowerFx.Core.Public.Values;
 using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 
 namespace PowerFxDotnetInteractive
 {
@@ -11,7 +13,8 @@ namespace PowerFxDotnetInteractive
         private readonly RecalcEngine _engine;
         private readonly string _expression;
         public HashSet<(string formula, string result)> Result { get; set; } = new HashSet<(string formula, string result)>();
-
+        private static List<string> _identifiers = new List<string>();
+        public HashSet<(string name, string result)> StateCheck { get; set; } = new HashSet<(string name, string result)>();
         public PowerFxExpression(RecalcEngine engine, string expression)
         {
             _engine = engine;
@@ -28,14 +31,18 @@ namespace PowerFxDotnetInteractive
                 {
                     var r = _engine.Eval(match.Groups["expr"].Value);
                     _engine.UpdateVariable(match.Groups["ident"].Value, r);
-                    Result.Add((originalExpression, match.Groups["ident"].Value + ": " + PrintResult(r)));
+                    if(!_identifiers.Contains(match.Groups["ident"].Value))
+                        _identifiers.Add(match.Groups["ident"].Value);
+                    Result.Add((originalExpression, PrintResult(r)));
                 }
 
                 // formula definition: <ident> = <formula>
                 else if ((match = Regex.Match(expression, @"^\s*(?<ident>\w+)\s*=(?<formula>.*)$")).Success)
                 {
                     _engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, OnUpdate);
-                    Result.Add((expression, match.Groups["ident"].Value + " = " + match.Groups["formula"]));
+                    if (!_identifiers.Contains(match.Groups["ident"].Value))
+                        _identifiers.Add(match.Groups["ident"].Value);
+                    Result.Add((expression, match.Groups["formula"].Value));
                 }
 
                 // eval and print everything else, unless empty lines and single line comment (which do nothing)
@@ -44,7 +51,7 @@ namespace PowerFxDotnetInteractive
                     var result = _engine.Eval(expression);
 
                     if (result is ErrorValue errorValue)
-                        Result.Add((originalExpression, "Error: " + errorValue.Errors[0].Message));
+                        Result.Add((originalExpression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
                     else
                         Result.Add((originalExpression, PrintResult(result)));
                 }
@@ -71,7 +78,7 @@ namespace PowerFxDotnetInteractive
                 var cleanedExpression = string.Join("",expression.Trim().Split("\n")).TrimEnd(';');
                 EvaluateSingleExpression(expression, cleanedExpression);
             }
-
+            StateCheck = _identifiers.Select(x => (name: x, currentValue: PrintResult(_engine.GetValue(x)))).ToHashSet();
             return this;
         }
         static void OnUpdate(string name, FormulaValue newValue)
@@ -95,68 +102,43 @@ namespace PowerFxDotnetInteractive
             {
                 case RecordValue record:
                     {
-                        var separator = "";
-                        resultString = "{ ";
-                        foreach (var field in record.Fields)
-                        {
-                            resultString += separator + $"\"{field.Name}\": ";
-                            resultString += PrintResult(field.Value);
-                            separator = ", ";
-                        }
-                        resultString += " }";
+                        resultString = $@"{{{string.Join(",", record.Fields.Select(field => $@"""{field.Name}"": {PrintResult(field.Value)}"))}}}".FormatJson();
                         break;
                     }
 
                 case TableValue table:
                     {
                         int valueSeen = 0, recordsSeen = 0;
-                        string separator = "";
-
                         // check if the table can be represented in simpler [ ] notation,
                         //   where each element is a record with a field named Value.
                         foreach (var row in table.Rows)
                         {
                             recordsSeen++;
-                            if (row.Value is RecordValue scanRecord)
-                            {
-                                foreach (var field in scanRecord.Fields)
-                                    if (field.Name == "Value")
-                                    {
-                                        valueSeen++;
-                                        resultString += separator + PrintResult(field.Value);
-                                        separator = ", ";
-                                    }
-                                    else
-                                        valueSeen = 0;
-                            }
-                            else
-                                valueSeen = 0;
+
+                            if (row.Value is not RecordValue scanRecord) continue;
+                            var cells = scanRecord.Fields.Where(field => field.Name == "Value").Select(field => PrintResult(field.Value));
+                            resultString += string.Join(", ", cells);
                         }
 
                         if (valueSeen == recordsSeen)
-                            return "[ " + resultString + " ]";
+                            return $"[{resultString}]";
                         else
                         {
                             // no, table is more complex that a single column of Value fields,
                             //   requires full treatment
-                            resultString = "Table(";
-                            separator = "";
-                            foreach (var row in table.Rows)
-                            {
-                                resultString += separator + PrintResult(row.Value);
-                                separator = ", ";
-                            }
-                            resultString += ")";
+                            var rows = string.Join(", ", table.Rows.Select(row => PrintResult(row.Value)));
+                            var formattedRows = $"[{rows}]".FormatJson();
+                            resultString = formattedRows;
                         }
 
                         break;
                     }
 
                 case ErrorValue errorValue:
-                    resultString = "<Error: " + errorValue.Errors[0].Message + ">";
+                    resultString = $@"{{""Error"": ""{errorValue.Errors[0].Message}""}}";
                     break;
                 case StringValue str:
-                    resultString = "\"" + str.ToObject().ToString().Replace("\"", "\"\"") + "\"";
+                    resultString = $@"""{str.ToObject()}""";
                     break;
                 case FormulaValue fv:
                     resultString = fv.ToObject().ToString();

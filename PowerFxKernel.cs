@@ -20,11 +20,23 @@ namespace PowerFxDotnetInteractive
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var powerFxResult = new PowerFxExpression(_engine, command.Code).Evaluate();
-            //context.Display(powerFxResult.Result);
-            var output = $"| Expression | Result |{"\n"}| - | - |{"\n"}{string.Join("\n", powerFxResult.Result.Select(x => $"| {x.formula.FormatInput()} | {x.result.FormatOutput()} |"))}";
-            //var x = powerFxResult.Result.Last();
-            //var output = $"`{x.result}`";
-            context.DisplayAs(output, "text/markdown");
+            var result = powerFxResult.Result.Select(x => $"| {x.formula.FormatInput()} | {x.result.FormatOutput()} |");
+            var stateCheckResult = powerFxResult.StateCheck.Select(x => $"| {x.name.FormatInput()} | {x.result.FormatOutput()} |");
+            var stateCheckOutput = $"| Variable | Result |{"\n"}| - | - |{"\n"}{string.Join("\n", result)}";
+            if (command.Code == "?")
+            {
+                context.DisplayAs(stateCheckOutput, "text/markdown");
+            }
+            else
+            {
+                var output = $"| Expression | Result |{"\n"}| - | - |{"\n"}{string.Join("\n", result)}";
+                context.DisplayAs(output, "text/markdown");
+                foreach (var item in powerFxResult.StateCheck)
+                {
+                    context.DisplayAs($"### {item.name}", "text/markdown");
+                    context.DisplayAs(item.result, "application/json");
+                }
+            }
             return Task.CompletedTask;
         }
     }

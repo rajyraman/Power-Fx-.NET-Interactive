@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
@@ -13,6 +14,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.PowerFx;
 using PowerFxDotnetInteractive;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+using Microsoft.DotNet.Interactive.Formatting.Csv;
 
 namespace PowerFx.Interactive
 {
@@ -31,14 +33,12 @@ namespace PowerFx.Interactive
                 _engine = new RecalcEngine();
                 compositeKernel.Add(new PowerFxKernel(_engine));
             }
-            var message = new HtmlString($@"<details><summary>Evaluate <a href=""https://github.com/microsoft/Power-Fx"">PowerFx Expressions</a>.</summary>");
+            var supportedFunctions = new HtmlString($@"<details><summary>These are the supported Power Fx functions in {typeof(RecalcEngine).Assembly.GetName().Version}.</summary>
+            <ol>{string.Join("",_engine.GetAllFunctionNames().Select(x=>$@"<li><a href=""https://docs.microsoft.com/en-us/search/?terms={x}&scope=Power%20Apps"" >{x}</a></li>"))}</ol></details><br>");
 
-
-            var formattedValue = new FormattedValue(
+            await kernel.SendAsync(new DisplayValue(new FormattedValue(
                 HtmlFormatter.MimeType,
-                message.ToDisplayString(HtmlFormatter.MimeType));
-
-            await kernel.SendAsync(new DisplayValue(formattedValue));
+                supportedFunctions.ToDisplayString(HtmlFormatter.MimeType))));
         }
     }
 }

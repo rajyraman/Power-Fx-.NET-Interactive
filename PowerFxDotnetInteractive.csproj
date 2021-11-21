@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net5.0</TargetFramework>
+		<IncludeBuildOutput>true</IncludeBuildOutput>
+		<IsPackable>true</IsPackable>
+		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.0.58</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="bin\**" />
+		<EmbeddedResource Remove="bin\**" />
+		<None Remove="bin\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="PowerFxExtension.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21559.2" />
+		<PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21559.2" />
+		<PackageReference Include="Microsoft.PowerFx.Core" Version="0.2.1-preview" />
+		<PackageReference Include="Microsoft.PowerFx.Interpreter" Version="0.2.1-preview" />
+		<PackageReference Include="Microsoft.PowerFx.LanguageServerProtocol" Version="0.2.1-preview" />
+		<PackageReference Include="System.Collections" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(OutputPath)/PowerFXDotNetInteractive.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+	</ItemGroup>
+
+</Project>

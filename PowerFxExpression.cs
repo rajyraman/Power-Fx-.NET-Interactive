@@ -12,7 +12,7 @@ namespace PowerFxDotnetInteractive
     {
         private readonly RecalcEngine _engine;
         private readonly string _expression;
-        public HashSet<(string formula, string result)> Result { get; set; } = new HashSet<(string formula, string result)>();
+        public HashSet<(string variable, string formula, string result)> Result { get; set; } = new HashSet<(string variable, string formula, string result)>();
         private static List<string> _identifiers = new List<string>();
         public HashSet<(string name, string result)> StateCheck { get; set; } = new HashSet<(string name, string result)>();
         public PowerFxExpression(RecalcEngine engine, string expression)
@@ -33,7 +33,7 @@ namespace PowerFxDotnetInteractive
                     _engine.UpdateVariable(match.Groups["ident"].Value, r);
                     if(!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
-                    Result.Add((originalExpression, PrintResult(r)));
+                    Result.Add((match.Groups["ident"].Value, originalExpression, PrintResult(r)));
                 }
 
                 // formula definition: <ident> = <formula>
@@ -42,7 +42,7 @@ namespace PowerFxDotnetInteractive
                     _engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, OnUpdate);
                     if (!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
-                    Result.Add((expression, match.Groups["formula"].Value));
+                    Result.Add((match.Groups["ident"].Value, expression, match.Groups["formula"].Value));
                 }
 
                 // eval and print everything else, unless empty lines and single line comment (which do nothing)
@@ -51,14 +51,14 @@ namespace PowerFxDotnetInteractive
                     var result = _engine.Eval(expression);
 
                     if (result is ErrorValue errorValue)
-                        Result.Add((originalExpression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
+                        Result.Add(("",originalExpression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
                     else
-                        Result.Add((originalExpression, PrintResult(result)));
+                        Result.Add(("",originalExpression, PrintResult(result)));
                 }
             }
             catch(InvalidOperationException ex)
             {
-                Result.Add((originalExpression, ex.Message));
+                Result.Add(("",originalExpression, ex.Message));
             }
         }
 

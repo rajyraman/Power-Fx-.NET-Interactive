@@ -12,7 +12,7 @@ namespace PowerFxDotnetInteractive
 {
     public static class InteractiveExtensions
     {
-        public static string FormatOutput(this string s) => $"<code>{s.ReplaceNewLines()}</code>";
+        public static string FormatOutput(this string s) => $"<pre><code>{s.ReplaceNewLines()}</code></pre>";
         public static string FormatInput(this string s) => $@"<pre style=""font-family: Consolas"" >{s.ReplaceNewLines()}</pre>";
 
         public static string ReplaceNewLines(this string s)
@@ -22,10 +22,8 @@ namespace PowerFxDotnetInteractive
             return string.Join("<br>", o.Split("\n"));
         }
 
-        public static string FormatJson(this string s)
-        {
-            return JsonSerializer.Serialize(JsonSerializer.Deserialize<dynamic>(s), 
-                new JsonSerializerOptions { WriteIndented = true });
-        }
+        public static string FormatJson(this string s) => JsonSerializer.Serialize(JsonSerializer.Deserialize<dynamic>(s), new JsonSerializerOptions { WriteIndented = true });
+
+        public static string Table(this string s) => $"<table><style>table {{ width: 95vw; }} th:first-child{{ width: 30% }}</style>{s}</table>";
     }
 }

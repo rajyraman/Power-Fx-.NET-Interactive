@@ -59,9 +59,13 @@ namespace PowerFxDotnetInteractive
         {
             string[] expressions = null;
             if (_expression.Contains(";"))
+            {
                 expressions = _expression.Split($";\n");
+            }
             else
                 expressions = _expression.Split("\n");
+            if (expressions.Length == 1)
+                expressions = _expression.Split($";\r\n");
             foreach (var expression in expressions)
             {
                 var cleanedExpression = string.Join("",expression.Trim().Split("\n")).TrimEnd(';');

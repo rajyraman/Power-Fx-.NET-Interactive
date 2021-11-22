@@ -24,6 +24,6 @@ namespace PowerFxDotnetInteractive
 
         public static string FormatJson(this string s) => JsonSerializer.Serialize(JsonSerializer.Deserialize<dynamic>(s), new JsonSerializerOptions { WriteIndented = true });
 
-        public static string Table(this string s) => $"<table><style>table {{ width: 95vw; }} th:first-child{{ width: 30% }}</style>{s}</table>";
+        public static string Table(this string s) => $"<table><style>table {{ width: 95vw; }} th:first-child,td:first-child {{overflow: auto; max-width: 30vw;}} th:last-child,td:last-child {{overflow: auto; min-width: 60vw;}}</style>{s}</table>";
     }
 }

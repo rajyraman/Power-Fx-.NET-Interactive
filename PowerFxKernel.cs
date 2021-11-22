@@ -13,7 +13,6 @@ namespace PowerFxDotnetInteractive
     class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>
     {
         private readonly RecalcEngine _engine;
-        private const string tableTemplate = @"<table><style>table { width: 95vw; }</style>|header|body|</table>";
         public PowerFxKernel(RecalcEngine engine) : base("PowerFx")
         {
             _engine = engine;

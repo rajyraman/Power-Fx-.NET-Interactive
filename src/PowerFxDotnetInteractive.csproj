@@ -7,7 +7,13 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.8.9</Version>
+		<Version>0.0.9.5</Version>
+		<Authors>Natraj Yegnaraman</Authors>
+		<Product>PowerFx.NET.Interactive</Product>
+		<PackageId>PowerFx.NET.Interactive</PackageId>
+		<Description>Power Fx Kernel for .NET Interactive</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReleaseNotes>1. Initial release</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,6 +24,10 @@
 
 	<ItemGroup>
 	  <Compile Remove="PowerFxExtension.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="README.md" />
 	</ItemGroup>
 
 	<ItemGroup>

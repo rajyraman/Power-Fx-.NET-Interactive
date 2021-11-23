@@ -1,26 +1,20 @@
-`RandomNumber` script-based extension
+PowerFx Kernel for .NET Interactive Notebook
 =====================================
 
-On the surface this project is a simple `netstandard2.0` library that packs itself as a NuGet package.  There is no
-runtime or build-time dependency on the `Microsoft.DotNet.Interactive` packages or tool, and any other project that
-references this will not be forced to take on those dependencies.  When this package is loaded into a .NET Interactive
-notebook, however, it _will_ register itself with the .NET Interactive host and prodide additional capabilities.
+This is a kernel to help people learn [Power Fx](https://github.com/microsoft/Power-Fx).
 
-This is all handled via the `extension.dib` file.  There is one part in the project file that places `extension.dib` in
-a well-known location within the resultant `.nupkg`:
+## Install .NET and Tools
 
-``` xml
-<ItemGroup>
-  <None Include="extension.dib" Pack="true" PackagePath="interactive-extensions/dotnet" />
-</ItemGroup>
-```
+1. [.NET Framework](https://dot.net/learntocode)
+2. [.NET Interactive Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
+3. [Data Table Extension](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table)
 
-When this NuGet package is referenced in a notebook via:
+## Useful videos to watch regarding .NET Interactive Notebooks
 
-```
-#r "nuget:RandomNumber, 0.1.0"
-```
+1. [Learn C# with Interactive Notebooks](https://www.youtube.com/watch?v=xdmdR2JfKfM)
+2. [NET Interactive Notebooks with C#/F# in VS Code](https://www.youtube.com/watch?v=DMYtIJT1OeU)
+3. [.NET Everywhere - Windows, Linux, and Beyond](https://www.youtube.com/watch?v=ZM6OO2lkxA4)
 
-The contents of `extension.dib` are immediately executed.  In the case of this extension, a magic command
-`#!get-random-number` is registered with the root kernel, but other extension-like behaviors like registering
-formatters can also happen.
+## Samples
+
+You can find a [sample notebook](./notebooks/PowerFx%20Notebook.dib) folder.

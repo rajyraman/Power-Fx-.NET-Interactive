@@ -13,7 +13,8 @@ namespace PowerFxDotnetInteractive
         private readonly RecalcEngine _engine;
         private readonly string _expression;
         public HashSet<(string variable, string formula, string result)> Result { get; set; } = new HashSet<(string variable, string formula, string result)>();
-        private static List<string> _identifiers = new List<string>();
+        public static List<string> _identifiers = new List<string>();
+        public List<string> Identifiers { get => _identifiers; }
         public HashSet<(string name, string result)> StateCheck { get; set; } = new HashSet<(string name, string result)>();
         public PowerFxExpression(RecalcEngine engine, string expression)
         {
@@ -33,13 +34,16 @@ namespace PowerFxDotnetInteractive
                     _engine.UpdateVariable(match.Groups["ident"].Value, r);
                     if(!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
-                    Result.Add((match.Groups["ident"].Value, originalExpression, PrintResult(r)));
+                    Result.Add((match.Groups["ident"].Value, originalExpression, UpdateResult(r)));
                 }
 
                 // formula definition: <ident> = <formula>
                 else if ((match = Regex.Match(expression, @"^\s*(?<ident>\w+)\s*=(?<formula>.*)$")).Success)
                 {
-                    _engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, OnUpdate);
+                    _engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, (string name, FormulaValue newValue)=> 
+                    {
+                        SetExpressionResult(originalExpression, newValue);
+                    });
                     if (!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
                     Result.Add((match.Groups["ident"].Value, expression, match.Groups["formula"].Value));
@@ -50,16 +54,21 @@ namespace PowerFxDotnetInteractive
                 {
                     var result = _engine.Eval(expression);
 
-                    if (result is ErrorValue errorValue)
-                        Result.Add(("",originalExpression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
-                    else
-                        Result.Add(("",originalExpression, PrintResult(result)));
+                    SetExpressionResult(originalExpression, result);
                 }
             }
             catch(InvalidOperationException ex)
             {
                 Result.Add(("",originalExpression, ex.Message));
             }
+        }
+
+        private void SetExpressionResult(string expression, FormulaValue result)
+        {
+            if (result is ErrorValue errorValue)
+                Result.Add(("", expression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
+            else
+                Result.Add(("", expression, UpdateResult(result)));
         }
 
         public PowerFxExpression Evaluate()
@@ -78,23 +87,11 @@ namespace PowerFxDotnetInteractive
                 var cleanedExpression = string.Join("",expression.Trim().Split("\n")).TrimEnd(';');
                 EvaluateSingleExpression(expression, cleanedExpression);
             }
-            StateCheck = _identifiers.Select(x => (name: x, currentValue: PrintResult(_engine.GetValue(x)))).ToHashSet();
+            StateCheck = _identifiers.Select(x => (name: x, currentValue: UpdateResult(_engine.GetValue(x)))).ToHashSet();
             return this;
         }
-        static void OnUpdate(string name, FormulaValue newValue)
-        {
-            Console.Write($"{name}: ");
-            if (newValue is ErrorValue errorValue)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error: " + errorValue.Errors[0].Message);
-                Console.ResetColor();
-            }
-            else
-                Console.WriteLine(PrintResult(newValue));
-        }
 
-        static string PrintResult(object value)
+        static string UpdateResult(object value)
         {
             string resultString = "";
 
@@ -102,31 +99,32 @@ namespace PowerFxDotnetInteractive
             {
                 case RecordValue record:
                     {
-                        resultString = $@"{{{string.Join(",", record.Fields.Select(field => $@"""{field.Name}"": {PrintResult(field.Value)}"))}}}".FormatJson();
+                        resultString = $@"{{{string.Join(",", record.Fields.Select(field => $@"""{field.Name}"": {UpdateResult(field.Value)}"))}}}".FormatJson();
                         break;
                     }
 
                 case TableValue table:
                     {
                         int valueSeen = 0, recordsSeen = 0;
-                        // check if the table can be represented in simpler [ ] notation,
-                        //   where each element is a record with a field named Value.
+
                         foreach (var row in table.Rows)
                         {
                             recordsSeen++;
 
                             if (row.Value is not RecordValue scanRecord) continue;
-                            var cells = scanRecord.Fields.Where(field => field.Name == "Value").Select(field => PrintResult(field.Value));
+                            var cells = scanRecord.Fields.Where(field => field.Name == "Value").Select(field => UpdateResult(field.Value));
                             resultString += string.Join(", ", cells);
                         }
 
+                        // check if the table can be represented in simpler [ ] notation,
+                        //   where each element is a record with a field named Value.
                         if (valueSeen == recordsSeen)
                             return $"[{resultString}]";
                         else
                         {
                             // no, table is more complex that a single column of Value fields,
                             //   requires full treatment
-                            var rows = string.Join(", ", table.Rows.Select(row => PrintResult(row.Value)));
+                            var rows = string.Join(", ", table.Rows.Select(row => UpdateResult(row.Value)));
                             var formattedRows = $"[{rows}]".FormatJson();
                             resultString = formattedRows;
                         }

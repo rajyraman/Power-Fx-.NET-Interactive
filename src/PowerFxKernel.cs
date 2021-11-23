@@ -7,9 +7,11 @@ using Microsoft.PowerFx;
 using Microsoft.PowerFx.Core.Public.Values;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace PowerFxDotnetInteractive
@@ -17,36 +19,32 @@ namespace PowerFxDotnetInteractive
     class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, ISupportSetClrValue, ISupportGetValue
     {
         private readonly RecalcEngine _engine;
-        public PowerFxKernel(RecalcEngine engine) : base("PowerFx")
+        private List<string> _identifiers;
+
+        public PowerFxKernel(RecalcEngine engine) : base("powerfx")
         {
             _engine = engine;
         }
         public Task HandleAsync(SubmitCode code, KernelInvocationContext context)
         {
             var powerFxResult = new PowerFxExpression(_engine, code.Code).Evaluate();
+            _identifiers = powerFxResult.Identifiers;
+
             var result = powerFxResult.Result.Select(x => $"<tr><td>{x.formula.FormatInput()}</td><td>{x.result.FormatOutput()}</td>");
             var stateCheckResult = powerFxResult.StateCheck.Select(x => $"<tr><td>{x.name.FormatInput()}</td><td>{x.result.FormatOutput()}</td></tr>");
             var stateCheckMarkdown = $"<tr><th>Variable</th><th>Result</th></tr>{string.Join("\n", stateCheckResult)}";
             if (code.Code == "?")
             {
                 context.DisplayAs(stateCheckMarkdown.Table(), "text/markdown");
+                foreach (var item in powerFxResult.StateCheck)
+                {
+                    DisplayStateCheck(context, item);
+                }
             }
             else
             {
                 var evaluationMarkdown = $"<tr><th>Expression</th><th>Result</th></tr>{"\n"}{string.Join("\n", result)}";
                 context.DisplayAs(evaluationMarkdown.Table(), "text/markdown");
-                if (powerFxResult.Result.Count == 1 && powerFxResult.StateCheck.Any(x => x.name == powerFxResult.Result.First().variable))
-                {
-                    var item = powerFxResult.StateCheck.FirstOrDefault(x => x.name == powerFxResult.Result.First().variable);
-                    DisplayStateCheck(context, item);
-                }
-                else
-                {
-                    foreach (var item in powerFxResult.StateCheck)
-                    {
-                        DisplayStateCheck(context, item);
-                    }
-                }
             }
             return Task.CompletedTask;
         }
@@ -64,17 +62,11 @@ namespace PowerFxDotnetInteractive
                 case string v:
                     _engine.UpdateVariable(name, name.EndsWith("json", StringComparison.InvariantCultureIgnoreCase) || (v.StartsWith("{") && v.EndsWith("}")) ? FormulaValue.FromJson(v) : FormulaValue.New(v));
                     break;
-                case DateTime:
-                case bool:
-                case double:
-                case float:
-                case int:
-                case decimal:
-                case long:
-                    _engine.UpdateVariable(name, FormulaValue.New(value,value.GetType()));
-                    break;
                 case IEnumerable<object> t:
                     _engine.UpdateVariable(name, FormulaValue.NewTable(t));
+                    break;
+                default:
+                    _engine.UpdateVariable(name, FormulaValue.New(value, value.GetType()));
                     break;
             }
             return Task.CompletedTask;
@@ -86,6 +78,8 @@ namespace PowerFxDotnetInteractive
             if(formulaValue != null)
             {
                 value = (T)formulaValue.ToObject();
+                if (value is IEnumerable<object>)
+                    value = (T)(object)JsonSerializer.Serialize<dynamic>(value);
                 return true;
             }
 
@@ -95,7 +89,9 @@ namespace PowerFxDotnetInteractive
 
         public IReadOnlyCollection<KernelValueInfo> GetValueInfos()
         {
-            //TODO: Get all values from engine
+            if (_identifiers.Any()) {
+                return new ReadOnlyCollection<KernelValueInfo>(_identifiers.Select(x => new KernelValueInfo(x, _engine.GetValue(x).GetType())).ToList()) ;
+            }
 
             return Array.Empty<KernelValueInfo>();
         }

@@ -18,4 +18,4 @@ This is a kernel to help people learn [Power Fx](https://github.com/microsoft/Po
 
 ## Samples
 
-You can find a [sample notebook](./notebooks/PowerFx%20Notebook.dib) folder.
+You can find a [sample notebook](./notebooks/PowerFx.ipynb) folder.

@@ -2,7 +2,7 @@
 PowerFx Kernel for .NET Interactive Notebook
 =====================================
 
-This is a kernel to help people learn [Power Fx](https://github.com/microsoft/Power-Fx).
+This is a kernel for [.NET Interactive Notebooks](https://github.com/dotnet/interactive) to help people learn [Power Fx](https://github.com/microsoft/Power-Fx).
 
 ## Install .NET and Tools
 
@@ -18,4 +18,4 @@ This is a kernel to help people learn [Power Fx](https://github.com/microsoft/Po
 
 ## Samples
 
-You can find a [sample notebook](./notebooks/PowerFx.ipynb) folder.
+You can find a [sample notebook](./notebooks/PowerFx.ipynb) folder. You can open the notebook in Binder and learn Power Fx just using your browser, by clicking the Binder icon on the top.

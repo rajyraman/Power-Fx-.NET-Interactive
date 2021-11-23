@@ -23,9 +23,7 @@
 Update the path to the assembly below before running the snippet below.
 
 #!csharp
-
-#i nuget:D:\GitHub\PowerFx-Magic-Command-Dotnet-Interactive\bin\Release\
-#r "nuget:PowerFXDotNetInteractive,0.0.7"
+#r "nuget: PowerFx.NET.Interactive,0.0.9.5"
 
 #!markdown
 
@@ -33,7 +31,7 @@ Update the path to the assembly below before running the snippet below.
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 Set(environment, ".NET Interactive")
 
 #!markdown
@@ -42,7 +40,7 @@ Set(environment, ".NET Interactive")
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 Set( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
@@ -58,7 +56,7 @@ Set( Products,
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 Set(varInput, ForAll( ["4"], Sqrt( Value ) ));
 Sequence(4);
 First(varInput);
@@ -69,7 +67,7 @@ First(varInput);
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 Set( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
@@ -87,7 +85,7 @@ AddColumns( Filter( Products, 'Quantity Requested' > 'Quantity Available' ), "Qu
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 Concat( 
     ForAll( Sequence(8) As Rank,
         Concat( 
@@ -106,5 +104,41 @@ Concat(
 
 #!csharp
 
-#!PowerFx
+#!powerfx
 ?
+
+#!markdown
+
+# Create a list variable in C#
+
+#!csharp
+
+using System.Collections.Generic;
+
+var x = new List<string>(new[]{"a"});
+var today = DateTime.Now;
+
+#!markdown
+
+# Use the list variable from C# in Power Fx
+
+#!csharp
+
+#!powerfx
+#!share x --from csharp
+#!share today --from csharp
+Set(varAlphabets, x)
+Set(varToday, today)
+
+#!markdown
+
+# Use the varText variable from Power Fx in C#
+
+#!powerfx
+Set(varText,"Hello Again")
+
+#!csharp
+
+#!share varText --from powerfx
+var output = varText;
+Console.WriteLine(output);

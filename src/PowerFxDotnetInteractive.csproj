@@ -14,6 +14,9 @@
 		<Description>Power Fx Kernel for .NET Interactive</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReleaseNotes>1. Initial release</PackageReleaseNotes>
+		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
+		<PackageTags>powerfx,.netinteractivenotebook,powerapps</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>

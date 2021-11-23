@@ -1,3 +1,4 @@
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rajyraman/Power-Fx-.NET-Interactive/main?urlpath=lab) <br>
 PowerFx Kernel for .NET Interactive Notebook
 =====================================
 

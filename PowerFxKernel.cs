@@ -64,20 +64,17 @@ namespace PowerFxDotnetInteractive
                 case string v:
                     _engine.UpdateVariable(name, name.EndsWith("json", StringComparison.InvariantCultureIgnoreCase) || (v.StartsWith("{") && v.EndsWith("}")) ? FormulaValue.FromJson(v) : FormulaValue.New(v));
                     break;
-                case DateTime v:
-                    _engine.UpdateVariable(name, FormulaValue.New(v));
+                case DateTime:
+                case bool:
+                case double:
+                case float:
+                case int:
+                case decimal:
+                case long:
+                    _engine.UpdateVariable(name, FormulaValue.New(value,value.GetType()));
                     break;
-                case bool v:
-                    _engine.UpdateVariable(name, FormulaValue.New(v));
-                    break;
-                case double v:
-                    _engine.UpdateVariable(name, FormulaValue.New(v));
-                    break;
-                case float v:
-                    _engine.UpdateVariable(name, FormulaValue.New(v));
-                    break;
-                case int v:
-                    _engine.UpdateVariable(name, FormulaValue.New(v));
+                case IEnumerable<object> t:
+                    _engine.UpdateVariable(name, FormulaValue.NewTable(t));
                     break;
             }
             return Task.CompletedTask;

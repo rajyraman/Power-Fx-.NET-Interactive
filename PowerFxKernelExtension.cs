@@ -15,12 +15,15 @@ using Microsoft.PowerFx;
 using PowerFxDotnetInteractive;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using Microsoft.DotNet.Interactive.Formatting.Csv;
+using Microsoft.DotNet.Interactive.ValueSharing;
+using System.Collections.Generic;
 
 namespace PowerFx.Interactive
 {
-    public class PowerFxKernelExtension :  IKernelExtension, IStaticContentSource
+    public class PowerFxKernelExtension : IKernelExtension
     {
         private static RecalcEngine _engine;
+        private static Kernel _kernel;
         public string Name => "Power Fx";
 
         public async Task OnLoadAsync(Kernel kernel)
@@ -31,7 +34,7 @@ namespace PowerFx.Interactive
                 Debugger.Launch();
 #endif
                 _engine = new RecalcEngine();
-                compositeKernel.Add(new PowerFxKernel(_engine));
+                compositeKernel.Add(new PowerFxKernel(_engine).UseValueSharing());
             }
             var supportedFunctions = new HtmlString($@"<details><summary>These are the supported Power Fx functions in {typeof(RecalcEngine).Assembly.GetName().Version}.</summary>
             <ol>{string.Join("",_engine.GetAllFunctionNames().Select(x=>$@"<li><a href=""https://docs.microsoft.com/en-us/search/?terms={x}&scope=Power%20Apps"" >{x}</a></li>"))}</ol></details><br>");

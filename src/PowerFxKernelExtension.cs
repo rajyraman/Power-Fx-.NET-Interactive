@@ -30,9 +30,6 @@ namespace PowerFx.Interactive
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-#if DEBUG
-                Debugger.Launch();
-#endif
                 _engine = new RecalcEngine();
                 compositeKernel.Add(new PowerFxKernel(_engine).UseValueSharing());
             }

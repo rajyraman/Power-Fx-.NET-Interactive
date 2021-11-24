@@ -10,6 +10,7 @@ namespace PowerFxDotnetInteractive
 {
     public class PowerFxExpression
     {
+        private readonly string[] _assignments = new string[] { "Set", "Collect", "ClearCollect" };
         private readonly RecalcEngine _engine;
         private readonly string _expression;
         public HashSet<(string variable, string formula, string result)> Result { get; set; } = new HashSet<(string variable, string formula, string result)>();
@@ -25,10 +26,10 @@ namespace PowerFxDotnetInteractive
         {
             try
             {
-                Match match;
+                Match match = _assignments.Select(assignmentFunction => Regex.Match(expression, @$"^\s*{assignmentFunction}\(\s*(?<ident>\w+)\s*,\s*(?<expr>.*)\)\s*$")).FirstOrDefault(x => x.Success);
 
-                // variable assignment: Set( <ident>, <expr> )
-                if ((match = Regex.Match(expression, @"^\s*Set\(\s*(?<ident>\w+)\s*,\s*(?<expr>.*)\)\s*$")).Success)
+                // variable assignment: Set or Collect or ClearCollect( <ident>, <expr> )
+                if (match != null)
                 {
                     var r = _engine.Eval(match.Groups["expr"].Value);
                     _engine.UpdateVariable(match.Groups["ident"].Value, r);

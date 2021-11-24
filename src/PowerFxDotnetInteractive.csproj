@@ -7,13 +7,14 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.9.5</Version>
+		<Version>0.0.9.7</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>Power Fx Kernel for .NET Interactive</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Initial release</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Added Collect, ClearCollect
+2. Upload Release build</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageTags>powerfx,.netinteractivenotebook,powerapps</PackageTags>

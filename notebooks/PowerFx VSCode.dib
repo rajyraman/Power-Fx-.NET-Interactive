@@ -20,7 +20,7 @@
 
 #!csharp
 
-#r "nuget: PowerFx.NET.Interactive,0.0.9.5"
+#r "nuget: PowerFx.NET.Interactive,0.0.9.7"
 
 #!markdown
 
@@ -38,7 +38,7 @@ Set(environment, ".NET Interactive")
 #!csharp
 
 #!powerfx
-Set( Products,
+ClearCollect( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
         { Product: "Gadget",    'Quantity Requested': 10, 'Quantity Available': 20 },
@@ -65,7 +65,7 @@ First(varInput);
 #!csharp
 
 #!powerfx
-Set( Products,
+ClearCollect( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
         { Product: "Gadget",    'Quantity Requested': 10, 'Quantity Available': 20 },

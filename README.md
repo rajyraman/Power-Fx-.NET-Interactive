@@ -19,3 +19,8 @@ This is a kernel for [.NET Interactive Notebooks](https://github.com/dotnet/inte
 ## Samples
 
 You can find a [sample notebook](./notebooks/PowerFx.ipynb) folder. You can open the notebook in Binder and learn Power Fx just using your browser, by clicking the Binder icon on the top.
+
+## Credits
+
+1. [Power Fx Host Sample](https://github.com/microsoft/power-fx-host-samples) for the parsing code.
+2. [.NET Interactive](https://github.com/dotnet/interactive) for the Binder Dockerfile.

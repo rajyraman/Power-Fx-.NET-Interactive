@@ -16,15 +16,18 @@ using System.Threading.Tasks;
 
 namespace PowerFxDotnetInteractive
 {
-    class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, ISupportSetClrValue, ISupportGetValue
+    public class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, ISupportSetClrValue, ISupportGetValue
     {
-        private readonly RecalcEngine _engine;
+        private static RecalcEngine _engine;
         private List<string> _identifiers;
 
         public PowerFxKernel(RecalcEngine engine) : base("powerfx")
         {
             _engine = engine;
         }
+
+        public static RecalcEngine GetRecalcEngine() => _engine;
+
         public Task HandleAsync(SubmitCode code, KernelInvocationContext context)
         {
             var powerFxResult = new PowerFxExpression(_engine, code.Code).Evaluate();

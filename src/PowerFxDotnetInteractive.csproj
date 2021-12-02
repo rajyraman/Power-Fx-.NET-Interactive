@@ -7,14 +7,14 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.9.7</Version>
+		<Version>2021.12.03.1</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>Power Fx Kernel for .NET Interactive</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Added Collect, ClearCollect
-2. Upload Release build</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Exposed RecalcEngine, so that it can be used in Notebooks.
+2. Removed reference to PowerFx LanguageServer.</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageTags>powerfx,.netinteractivenotebook,powerapps</PackageTags>
@@ -39,7 +39,6 @@
 		<PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21559.2" />
 		<PackageReference Include="Microsoft.PowerFx.Core" Version="0.2.1-preview" />
 		<PackageReference Include="Microsoft.PowerFx.Interpreter" Version="0.2.1-preview" />
-		<PackageReference Include="Microsoft.PowerFx.LanguageServerProtocol" Version="0.2.1-preview" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 	</ItemGroup>
 

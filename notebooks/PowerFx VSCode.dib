@@ -1,14 +1,20 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"},{"aliases":[],"languageName":"powerfx","name":"powerfx"}]}}
+
 #!markdown
 
 # Install .NET and Tools
 
 1. [.NET Framework](https://dot.net/learntocode)
-2. [.NET Interactive Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
+2. [Polyglot Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
 3. [Data Table Extension](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table)
 
 #!markdown
 
-# Useful videos to watch regarding .NET Interactive Notebooks
+# Useful videos to watch regarding Polyglot Notebooks
+
+.NET Interactive Notebooks was renamed to Polyglot Notebooks.
 
 1. [Learn C# with Interactive Notebooks](https://www.youtube.com/watch?v=xdmdR2JfKfM)
 2. [NET Interactive Notebooks with C#/F# in VS Code](https://www.youtube.com/watch?v=DMYtIJT1OeU)
@@ -16,28 +22,35 @@
 
 #!markdown
 
-## Install Power Fx Kernel
+## Install Power Fx Kernel - Local Dev Version
 
 #!csharp
 
-#r "nuget: PowerFx.NET.Interactive,0.0.9.7"
+#i nuget:D:\GitHub\Power-Fx-.NET-Interactive\src\bin\Debug\
+#r "nuget:PowerFx.NET.Interactive,2024.05.01.8"
+
+#!markdown
+
+## Install Power Fx Kernel - Nuget
+
+#!csharp
+
+#r "nuget: PowerFx.NET.Interactive,2024.05.01.8"
 
 #!markdown
 
 ## Set Variable
 
-#!csharp
-
 #!powerfx
-Set(environment, ".NET Interactive")
+
+Set(environment, "Polyglot Notebooks 💗 Power Fx")
 
 #!markdown
 
 ## Set Table
 
-#!csharp
-
 #!powerfx
+
 ClearCollect( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
@@ -51,9 +64,8 @@ ClearCollect( Products,
 
 ## Run Multiple Formulas
 
-#!csharp
-
 #!powerfx
+
 Set(varInput, ForAll( ["4"], Sqrt( Value ) ));
 Sequence(4);
 First(varInput);
@@ -62,9 +74,8 @@ First(varInput);
 
 ## Tables and Filtering
 
-#!csharp
-
 #!powerfx
+
 ClearCollect( Products,
     Table(
         { Product: "Widget",    'Quantity Requested': 6,  'Quantity Available': 3 },
@@ -74,34 +85,32 @@ ClearCollect( Products,
     )
 );
 First(Products);
-AddColumns( Filter( Products, 'Quantity Requested' > 'Quantity Available' ), "Quantity To Order", 'Quantity Requested' - 'Quantity Available');
+AddColumns( Filter( Products, 'Quantity Requested' > 'Quantity Available' ), 'Quantity To Order', 'Quantity Requested' - 'Quantity Available');
 
 #!markdown
 
 ## Generate Table
 
-#!csharp
-
 #!powerfx
-Concat( 
+
+Concat(
     ForAll( Sequence(8) As Rank,
-        Concat( 
-            ForAll( Sequence(8) As File, 
-                    If( Mod(Rank.Value + File.Value, 2) = 1, " X ", " . " ) 
+        Concat(
+            ForAll( Sequence(8) As File,
+                    If( Mod(Rank.Value + File.Value, 2) = 1, " X ", " . " )
             ),
-            Value 
-        ) & Char(10) 
-    ), 
-    Value 
+            Value
+        ) & Char(10)
+    ),
+    Value
 );
 
 #!markdown
 
 ## Query current state
 
-#!csharp
-
 #!powerfx
+
 ?
 
 #!markdown
@@ -119,9 +128,8 @@ var today = DateTime.Now;
 
 ## Use variables from C# in Power Fx
 
-#!csharp
-
 #!powerfx
+
 #!share x --from csharp
 #!share today --from csharp
 Set(varAlphabets, x)
@@ -139,9 +147,8 @@ Set(varToday, today)
 
 ## Now use colourJSON from value magic command
 
-#!javascript
-
 #!powerfx
+
 #!share colourJSON --from value
 Set(varColours, colourJSON)
 
@@ -149,9 +156,8 @@ Set(varColours, colourJSON)
 
 ## Set variables in Power Fx
 
-#!javascript
-
 #!powerfx
+
 Set(varText,"Hello Again")
 
 #!markdown

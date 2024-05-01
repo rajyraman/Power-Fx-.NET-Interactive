@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive;
 using Microsoft.PowerFx;
-using Microsoft.PowerFx.Core.Public.Values;
 using System;
 using System.Diagnostics;
 using System.Text.Json;

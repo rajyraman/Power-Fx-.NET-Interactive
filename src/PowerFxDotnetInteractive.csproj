@@ -2,19 +2,19 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<IsPackable>true</IsPackable>
 		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>2021.12.03.1</Version>
+		<Version>2024.05.01.8</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>Power Fx Kernel for .NET Interactive</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Exposed RecalcEngine, so that it can be used in Notebooks.
-2. Removed reference to PowerFx LanguageServer.</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Update Power Fx version to 1.2.0 and cleanup
+2. Add Intellisense</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageTags>powerfx,.netinteractivenotebook,powerapps</PackageTags>
@@ -35,10 +35,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21559.2" />
-		<PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21559.2" />
-		<PackageReference Include="Microsoft.PowerFx.Core" Version="0.2.1-preview" />
-		<PackageReference Include="Microsoft.PowerFx.Interpreter" Version="0.2.1-preview" />
+		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24229.4" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24229.4" />
+		<PackageReference Include="Microsoft.PowerFx.Core" Version="1.2.0" />
+		<PackageReference Include="Microsoft.PowerFx.Interpreter" Version="1.2.0" />
+		<PackageReference Include="Microsoft.PowerFx.Json" Version="1.2.0" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 	</ItemGroup>
 

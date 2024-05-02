@@ -1,1 +1,1 @@
-FROM mcr.microsoft.com/devcontainers/dotnet:1-8.0
+FROM mcr.microsoft.com/devcontainers/dev-8.0-jammy

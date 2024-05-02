@@ -1,1 +1,0 @@
-FROM mcr.microsoft.com/devcontainers/dev-8.0-jammy

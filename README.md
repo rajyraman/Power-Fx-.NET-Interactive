@@ -1,4 +1,3 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rajyraman/Power-Fx-.NET-Interactive/main?urlpath=lab) <br>
 PowerFx Kernel for Polyglot Notebooks (previous known as .NET Interactive Notebooks)
 =====================================
 
@@ -18,9 +17,8 @@ This is a kernel for [Polyglot Notebooks](https://github.com/dotnet/interactive)
 
 ## Samples
 
-You can find the [Power Fx Notebook](./notebooks/PowerFx.ipynb) in the notebooks folder. You can open the notebook in Binder and learn Power Fx just using your browser, by clicking the Binder icon on the top.
+You can find the [Power Fx Notebook](./notebooks/PowerFx.ipynb) in the notebooks folder. You can open the notebook in [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) with Docker, Podman or locally.
 
 ## Credits
 
 1. [Power Fx Host Sample](https://github.com/microsoft/power-fx-host-samples) for the parsing code.
-2. [.NET Interactive](https://github.com/dotnet/interactive) for the Binder Dockerfile.

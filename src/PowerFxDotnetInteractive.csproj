@@ -7,7 +7,7 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).23</Version>
+		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).1</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>

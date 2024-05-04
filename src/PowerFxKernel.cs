@@ -35,11 +35,9 @@ namespace PowerFxDotnetInteractive
             KernelInfo.LanguageName = "powerfx";
             KernelInfo.Description = "This Kernel can evaluate Power Fx snippets.";
             KernelInfo.LanguageVersion = typeof(RecalcEngine).Assembly.GetName().Version.ToString();
-            var environmentOption = new Option<string>("--environment", "Environment URL to connect to e.g. https://org.crm.dynamics.com");
-            environmentOption.AddAlias("-e");
-            var connectionString = new Option<string>("--connectionString", "Connection string for the Dataverse environment");
+            var connectionString = new Option<string>("--connectionString", "Connection string for the Dataverse environment") { IsRequired = true};
             connectionString.AddAlias("-c");
-            var runPowerFxDataverseCommand = new Command("#!dataverse-powerfx", "Run a Power Fx query on the Dataverse environment") { environmentOption, connectionString };
+            var runPowerFxDataverseCommand = new Command("#!dataverse-powerfx", "Run a Power Fx query on the Dataverse environment") { connectionString };
             Root.AddDirective(runPowerFxDataverseCommand);
             _engine = engine;
         }

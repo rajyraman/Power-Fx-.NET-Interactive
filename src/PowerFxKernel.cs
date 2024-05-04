@@ -49,16 +49,11 @@ namespace PowerFxDotnetInteractive
             var parentCode = submitCode.Parent as SubmitCode;
             if (parentCode != null && parentCode.Code.StartsWith("#!dataverse-powerfx"))
             {
-                var environmentValue = "";
                 var connectionStringValue = "";
                 var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
-                var environmentUrlIndex = originalCode.IndexOf("-e");
                 var connectionStringIndex = originalCode.IndexOf("-c");
-                if (environmentUrlIndex > -1)
-                    environmentValue = originalCode.Substring(environmentUrlIndex).Replace(@"-e", "").Trim();
                 if (connectionStringIndex > -1)
                     connectionStringValue = originalCode.Substring(connectionStringIndex).Replace(@"-c", "").Trim();
-                //await RunSQL(submitCode.Code, environmentValue, connectionStringValue);
                 var svcClient = new ServiceClient(connectionStringValue);
                 var dataverse = SingleOrgPolicy.New(svcClient);
                 _engine.EnableDelegation(500);

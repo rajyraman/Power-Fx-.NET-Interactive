@@ -9,6 +9,7 @@ using Microsoft.PowerFx.Dataverse;
 using Microsoft.PowerFx.Intellisense;
 using Microsoft.PowerFx.Types;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.Xrm.Sdk;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -17,13 +18,17 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PowerFxDotnetInteractive
 {
-    public class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, IKernelCommandHandler<RequestValue>, IKernelCommandHandler<SendValue>, IKernelCommandHandler<RequestCompletions>
+    public partial class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, IKernelCommandHandler<RequestValue>, IKernelCommandHandler<SendValue>, IKernelCommandHandler<RequestCompletions>
     {
         private static RecalcEngine _engine;
+        private static Dictionary<string,ServiceClient> _connections = new();
+        private static DataverseConnection _dataverseConnection;
+
         private List<string> _identifiers;
 
         public PowerFxKernel(RecalcEngine engine) : base("powerfx")
@@ -46,18 +51,21 @@ namespace PowerFxDotnetInteractive
 
         public Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
-            var parentCode = submitCode.Parent as SubmitCode;
+            SubmitCode parentCode = submitCode.Parent as SubmitCode;
             if (parentCode != null && parentCode.Code.StartsWith("#!dataverse-powerfx"))
             {
-                var connectionStringValue = "";
                 var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
                 var connectionStringIndex = originalCode.IndexOf("-c");
-                if (connectionStringIndex > -1)
-                    connectionStringValue = originalCode.Substring(connectionStringIndex).Replace(@"-c", "").Trim();
-                var svcClient = new ServiceClient(connectionStringValue);
-                var dataverse = SingleOrgPolicy.New(svcClient);
-                _engine.EnableDelegation(500);
-                var result = _engine.EvalAsync(submitCode.Code, default, dataverse.SymbolValues).Result;
+                var connectionStringValue = originalCode[connectionStringIndex..].Replace(@"-c", "").Trim();
+                var environmentUrl = UrlRegex().Matches(connectionStringValue).First().Value;
+                if (!_connections.ContainsKey(environmentUrl))
+                {
+                    var client = new ServiceClient(connectionStringValue);
+                    _connections.Add(environmentUrl, client);
+                    _dataverseConnection = SingleOrgPolicy.New(client);
+                    _engine.EnableDelegation();
+                }
+                var result = _engine.EvalAsync(submitCode.Code, default, _dataverseConnection.SymbolValues).Result;
                 var entityObject = result.ToObject();
                 var entityText = entityObject.DumpText();
                 context.DisplayAs(entityText, "text/plain");
@@ -126,7 +134,7 @@ namespace PowerFxDotnetInteractive
         {
             await SetValueAsync(command, context, SetAsync);
 
-            Task SetAsync(string name, object value, Type declaredType)
+            static Task SetAsync(string name, object value, Type declaredType)
             {
                 switch (value)
                 {
@@ -191,29 +199,20 @@ namespace PowerFxDotnetInteractive
 
         private static string GetCompletionItemKind(SuggestionKind kind)
         {
-            switch (kind)
+            return kind switch
             {
-                case SuggestionKind.Function:
-                case SuggestionKind.ServiceFunctionOption:
-                    return "Method";
-                case SuggestionKind.KeyWord:
-                    return "Keyword";
-                case SuggestionKind.Global:
-                case SuggestionKind.Alias:
-                case SuggestionKind.Local:
-                case SuggestionKind.ScopeVariable:
-                    return "Variable";
-                case SuggestionKind.Field:
-                    return "Field";
-                case SuggestionKind.Enum:
-                    return "Enum";
-                case SuggestionKind.BinaryOperator:
-                    return "Operator";
-                case SuggestionKind.Service:
-                    return "Module";
-                default:
-                    return "Text";
-            }
+                SuggestionKind.Function or SuggestionKind.ServiceFunctionOption => "Method",
+                SuggestionKind.KeyWord => "Keyword",
+                SuggestionKind.Global or SuggestionKind.Alias or SuggestionKind.Local or SuggestionKind.ScopeVariable => "Variable",
+                SuggestionKind.Field => "Field",
+                SuggestionKind.Enum => "Enum",
+                SuggestionKind.BinaryOperator => "Operator",
+                SuggestionKind.Service => "Module",
+                _ => "Text",
+            };
         }
+
+        [GeneratedRegex(@"((http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-.]*[\w]))")]
+        private static partial Regex UrlRegex();
     }
 }

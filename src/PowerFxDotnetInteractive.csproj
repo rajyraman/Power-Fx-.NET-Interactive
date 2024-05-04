@@ -7,7 +7,7 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).19</Version>
+		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).23</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
@@ -40,12 +40,12 @@
 		<PackageReference Include="Dumpify" Version="0.6.5" />
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24229.4" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24229.4" />
-		<PackageReference Include="Microsoft.PowerFx.Core" Version="$(PowerFxVersion)" />
 		<PackageReference Include="Microsoft.PowerFx.Dataverse.Eval" Version="1.2.0-build.20231002-1005" />
-		<PackageReference Include="Microsoft.PowerFx.Json" Version="$(PowerFxVersion)" />
 		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.22" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
 		<PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+		<PackageReference Include="Microsoft.PowerFx.Core" Version="$(PowerFxVersion)" />
+		<PackageReference Include="Microsoft.PowerFx.Json" Version="$(PowerFxVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>

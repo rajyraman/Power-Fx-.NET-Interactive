@@ -143,7 +143,7 @@ namespace PowerFxDotnetInteractive
                     resultString = uov.ToString();
                     break;
                 case FormulaValue fv:
-                    resultString = fv.ToObject().ToString();
+                    resultString = fv.ToObject()?.ToString();
                     break;
                 default:
                     throw new Exception("unexpected type in PrintResult");

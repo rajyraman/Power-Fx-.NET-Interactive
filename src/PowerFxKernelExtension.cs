@@ -30,7 +30,10 @@ namespace PowerFx.Interactive
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                _engine = new RecalcEngine();
+                var config = new PowerFxConfig();
+                config.EnableParseJSONFunction();
+                config.EnableSetFunction();
+                _engine = new RecalcEngine(config);
                 compositeKernel.Add(new PowerFxKernel(_engine).UseValueSharing());
             }
             var supportedFunctions = new HtmlString($@"<details><summary>These are the supported Power Fx functions in {typeof(RecalcEngine).Assembly.GetName().Version}.</summary>

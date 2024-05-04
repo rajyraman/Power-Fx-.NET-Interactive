@@ -1,15 +1,21 @@
-﻿using Microsoft.DotNet.Interactive;
+﻿using Dumpify;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.PowerFx;
+using Microsoft.PowerFx.Dataverse;
 using Microsoft.PowerFx.Intellisense;
 using Microsoft.PowerFx.Types;
+using Microsoft.PowerPlatform.Dataverse.Client;
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -25,34 +31,65 @@ namespace PowerFxDotnetInteractive
 #if DEBUG
             if (!Debugger.IsAttached) Debugger.Launch();
 #endif
+            ObjectCache cache = MemoryCache.Default;
             KernelInfo.LanguageName = "powerfx";
             KernelInfo.Description = "This Kernel can evaluate Power Fx snippets.";
             KernelInfo.LanguageVersion = typeof(RecalcEngine).Assembly.GetName().Version.ToString();
+            var environmentOption = new Option<string>("--environment", "Environment URL to connect to e.g. https://org.crm.dynamics.com");
+            environmentOption.AddAlias("-e");
+            var connectionString = new Option<string>("--connectionString", "Connection string for the Dataverse environment");
+            connectionString.AddAlias("-c");
+            var runPowerFxDataverseCommand = new Command("#!dataverse-powerfx", "Run a Power Fx query on the Dataverse environment") { environmentOption, connectionString };
+            Root.AddDirective(runPowerFxDataverseCommand);
             _engine = engine;
         }
 
         public static RecalcEngine GetRecalcEngine() => _engine;
 
-        public Task HandleAsync(SubmitCode code, KernelInvocationContext context)
+        public Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
-            var powerFxResult = new PowerFxExpression(_engine, code.Code).Evaluate();
-            _identifiers = powerFxResult.Identifiers;
-
-            var result = powerFxResult.Result.Select(x => $"<tr><td>{x.formula.FormatInput()}</td><td>{x.result.FormatOutput()}</td>");
-            var stateCheckResult = powerFxResult.StateCheck.Select(x => $"<tr><td>{x.name.FormatInput()}</td><td>{x.result.FormatOutput()}</td></tr>");
-            var stateCheckMarkdown = $"<tr><th>Variable</th><th>Result</th></tr>{string.Join("\n", stateCheckResult)}";
-            if (code.Code == "?")
+            var parentCode = submitCode.Parent as SubmitCode;
+            if (parentCode != null && parentCode.Code.StartsWith("#!dataverse-powerfx"))
             {
-                context.DisplayAs(stateCheckMarkdown.Table(), "text/markdown");
-                foreach (var item in powerFxResult.StateCheck)
-                {
-                    DisplayStateCheck(context, item);
-                }
+                var environmentValue = "";
+                var connectionStringValue = "";
+                var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
+                var environmentUrlIndex = originalCode.IndexOf("-e");
+                var connectionStringIndex = originalCode.IndexOf("-c");
+                if (environmentUrlIndex > -1)
+                    environmentValue = originalCode.Substring(environmentUrlIndex).Replace(@"-e", "").Trim();
+                if (connectionStringIndex > -1)
+                    connectionStringValue = originalCode.Substring(connectionStringIndex).Replace(@"-c", "").Trim();
+                //await RunSQL(submitCode.Code, environmentValue, connectionStringValue);
+                var svcClient = new ServiceClient(connectionStringValue);
+                var dataverse = SingleOrgPolicy.New(svcClient);
+                _engine.EnableDelegation(500);
+                var result = _engine.EvalAsync(submitCode.Code, default, dataverse.SymbolValues).Result;
+                var entityObject = result.ToObject();
+                var entityText = entityObject.DumpText();
+                context.DisplayAs(entityText, "text/plain");
             }
             else
             {
-                var evaluationMarkdown = $"<tr><th>Expression</th><th>Result</th></tr>{"\n"}{string.Join("\n", result)}";
-                context.DisplayAs(evaluationMarkdown.Table(), "text/markdown");
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate();
+                _identifiers = powerFxResult.Identifiers;
+
+                var result = powerFxResult.Result.Select(x => $"<tr><td>{x.formula.FormatInput()}</td><td>{x.result.FormatOutput()}</td>");
+                var stateCheckResult = powerFxResult.StateCheck.Select(x => $"<tr><td>{x.name.FormatInput()}</td><td>{x.result.FormatOutput()}</td></tr>");
+                var stateCheckMarkdown = $"<tr><th>Variable</th><th>Result</th></tr>{string.Join("\n", stateCheckResult)}";
+                if (submitCode.Code == "?")
+                {
+                    context.DisplayAs(stateCheckMarkdown.Table(), "text/markdown");
+                    foreach (var item in powerFxResult.StateCheck)
+                    {
+                        DisplayStateCheck(context, item);
+                    }
+                }
+                else
+                {
+                    var evaluationMarkdown = $"<tr><th>Expression</th><th>Result</th></tr>{"\n"}{string.Join("\n", result)}";
+                    context.DisplayAs(evaluationMarkdown.Table(), "text/markdown");
+                }
             }
             return Task.CompletedTask;
         }

@@ -1,10 +1,10 @@
 ﻿using Microsoft.PowerFx;
-using Microsoft.PowerFx.Core.Public.Values;
 using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.PowerFx.Types;
 
 namespace PowerFxDotnetInteractive
 {
@@ -139,8 +139,11 @@ namespace PowerFxDotnetInteractive
                 case StringValue str:
                     resultString = $@"""{str.ToObject()}""";
                     break;
+                case UntypedObjectValue uov:
+                    resultString = uov.ToString();
+                    break;
                 case FormulaValue fv:
-                    resultString = fv.ToObject().ToString();
+                    resultString = fv.ToObject()?.ToString();
                     break;
                 default:
                     throw new Exception("unexpected type in PrintResult");

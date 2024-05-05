@@ -2,22 +2,23 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<IncludeBuildOutput>true</IncludeBuildOutput>
 		<IsPackable>true</IsPackable>
-		<PackageDescription>Evaluates PowerFX expression</PackageDescription>
+		<PackageDescription>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>2021.12.03.1</Version>
+		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).4</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
-		<Description>Power Fx Kernel for .NET Interactive</Description>
+		<Description>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Exposed RecalcEngine, so that it can be used in Notebooks.
-2. Removed reference to PowerFx LanguageServer.</PackageReleaseNotes>
+		<PackageReleaseNotes>1.Added Dataverse querying capability</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
-		<PackageTags>powerfx,.netinteractivenotebook,powerapps</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>powerfx,.netinteractivenotebook,powerapps,polyglotnotebooks</PackageTags>
+		<Title>Power Fx Kernel for Polyglot Notebooks</Title>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,15 +36,23 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21559.2" />
-		<PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.21559.2" />
-		<PackageReference Include="Microsoft.PowerFx.Core" Version="0.2.1-preview" />
-		<PackageReference Include="Microsoft.PowerFx.Interpreter" Version="0.2.1-preview" />
+		<PackageReference Include="Dumpify" Version="0.6.5" />
+		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24229.4" />
+		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24229.4" />
+		<PackageReference Include="Microsoft.PowerFx.Dataverse.Eval" Version="1.3.0-build.20240418-1001" />
+		<PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.1.22" />
 		<PackageReference Include="System.Collections" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+		<PackageReference Include="Microsoft.PowerFx.Core" Version="1.3.0-build.20240423-1001" />
+		<PackageReference Include="Microsoft.PowerFx.Json" Version="1.3.0-build.20240423-1001" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="$(OutputPath)/PowerFXDotNetInteractive.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+		<None Include="..\README.md">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
 
 </Project>

@@ -26,8 +26,7 @@ namespace PowerFxDotnetInteractive
     public partial class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, IKernelCommandHandler<RequestValue>, IKernelCommandHandler<SendValue>, IKernelCommandHandler<RequestCompletions>
     {
         private static RecalcEngine _engine;
-        private static Dictionary<string,ServiceClient> _connections = new();
-        private static DataverseConnection _dataverseConnection;
+        private static Dictionary<string,(ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
 
         private List<string> _identifiers;
 
@@ -58,14 +57,16 @@ namespace PowerFxDotnetInteractive
                 var connectionStringIndex = originalCode.IndexOf("-c");
                 var connectionStringValue = originalCode[connectionStringIndex..].Replace(@"-c", "").Trim();
                 var environmentUrl = UrlRegex().Matches(connectionStringValue).First().Value;
-                if (!_connections.ContainsKey(environmentUrl))
+                if (!_connections.TryGetValue(environmentUrl, out (ServiceClient serviceClient, DataverseConnection dataverseConnection) value))
                 {
                     var client = new ServiceClient(connectionStringValue);
-                    _connections.Add(environmentUrl, client);
-                    _dataverseConnection = SingleOrgPolicy.New(client);
-                    _engine.EnableDelegation();
+                    var dataverseConnection = SingleOrgPolicy.New(client);
+                    _engine.EnableDelegation(1000);
+                    value = (client, dataverseConnection);
+                    _connections.Add(environmentUrl, value);
                 }
-                var result = _engine.EvalAsync(submitCode.Code, default, _dataverseConnection.SymbolValues).Result;
+                var currentConnection = value;
+                var result = _engine.EvalAsync(submitCode.Code, default, currentConnection.dataverseConnection.SymbolValues).Result;
                 var entityObject = result.ToObject();
                 var entityText = entityObject.DumpText();
                 context.DisplayAs(entityText, "text/plain");

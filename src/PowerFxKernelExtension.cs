@@ -31,7 +31,7 @@ namespace PowerFx.Interactive
             if (kernel is CompositeKernel compositeKernel)
             {
                 var config = new PowerFxConfig();
-                config.EnableParseJSONFunction();
+                config.EnableJsonFunctions();
                 config.EnableSetFunction();
                 _engine = new RecalcEngine(config);
                 compositeKernel.Add(new PowerFxKernel(_engine).UseValueSharing());

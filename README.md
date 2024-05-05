@@ -6,8 +6,8 @@ This is a kernel for [Polyglot Notebooks](https://github.com/dotnet/interactive)
 ## Install .NET and Tools
 
 1. [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
-2. [.NET Interactive Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
-3. [Data Table Extension](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table)
+2. [Polyglot Notebooks Extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
+3. [Data Table Extension](https://marketplace.visualstudio.com/items?itemName=RandomFractalsInc.vscode-data-table) - Optional
 
 ## Useful videos to watch regarding .NET Interactive Notebooks
 

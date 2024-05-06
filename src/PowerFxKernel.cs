@@ -7,6 +7,7 @@ using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.PowerFx;
 using Microsoft.PowerFx.Dataverse;
 using Microsoft.PowerFx.Intellisense;
+using Microsoft.PowerFx.Syntax;
 using Microsoft.PowerFx.Types;
 using Microsoft.PowerPlatform.Dataverse.Client;
 using Microsoft.Xrm.Sdk;
@@ -26,6 +27,7 @@ namespace PowerFxDotnetInteractive
     public partial class PowerFxKernel : Kernel, IKernelCommandHandler<SubmitCode>, IKernelCommandHandler<RequestValue>, IKernelCommandHandler<SendValue>, IKernelCommandHandler<RequestCompletions>
     {
         private static RecalcEngine _engine;
+        private static ReadOnlySymbolTable _symbolTable;
         private static Dictionary<string,(ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
 
         private List<string> _identifiers;
@@ -51,21 +53,20 @@ namespace PowerFxDotnetInteractive
         public Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
             SubmitCode parentCode = submitCode.Parent as SubmitCode;
+            _symbolTable = _engine.EngineSymbols;
+
             if (parentCode != null && parentCode.Code.StartsWith("#!dataverse-powerfx"))
             {
-                var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
-                var connectionStringIndex = originalCode.IndexOf("-c");
-                var connectionStringValue = originalCode[connectionStringIndex..].Replace(@"-c", "").Trim();
-                var environmentUrl = UrlRegex().Matches(connectionStringValue).First().Value;
-                if (!_connections.TryGetValue(environmentUrl, out (ServiceClient serviceClient, DataverseConnection dataverseConnection) value))
+                var (connectionStringValue, environmentUrl) = GetEnvironmentUrl(submitCode, parentCode);
+                if (!_connections.TryGetValue(environmentUrl, out (ServiceClient serviceClient, DataverseConnection dataverseConnection) currentConnection))
                 {
                     var client = new ServiceClient(connectionStringValue);
                     var dataverseConnection = SingleOrgPolicy.New(client);
                     _engine.EnableDelegation(1000);
-                    value = (client, dataverseConnection);
-                    _connections.Add(environmentUrl, value);
+                    currentConnection = (client, dataverseConnection);
+                    _connections.Add(environmentUrl, currentConnection);
                 }
-                var currentConnection = value;
+                _symbolTable = ReadOnlySymbolTable.Compose(_engine.EngineSymbols, currentConnection.dataverseConnection.Symbols);
                 var result = _engine.EvalAsync(submitCode.Code, default, currentConnection.dataverseConnection.SymbolValues).Result;
                 var entityObject = result.ToObject();
                 var entityText = entityObject.DumpText();
@@ -94,6 +95,15 @@ namespace PowerFxDotnetInteractive
                 }
             }
             return Task.CompletedTask;
+        }
+
+        private static (string connectionStringValue, string environmentUrl) GetEnvironmentUrl(SubmitCode submitCode, SubmitCode parentCode)
+        {
+            var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
+            var connectionStringIndex = originalCode.IndexOf("-c");
+            var connectionStringValue = originalCode[connectionStringIndex..].Replace(@"-c", "").Trim();
+            var environmentUrl = UrlRegex().Matches(connectionStringValue).First().Value;
+            return (connectionStringValue, environmentUrl);
         }
 
         private static void DisplayStateCheck(KernelInvocationContext context, (string name, string result) item)
@@ -180,7 +190,8 @@ namespace PowerFxDotnetInteractive
         Task IKernelCommandHandler<RequestCompletions>.HandleAsync(RequestCompletions requestCompletions, KernelInvocationContext context)
         {
             CompletionsProduced completion;
-            var checkResult = _engine.Check(requestCompletions.Code, new ParserOptions(CultureInfo.InvariantCulture), _engine.EngineSymbols);
+
+            var checkResult = _engine.Check(requestCompletions.Code, new ParserOptions(CultureInfo.InvariantCulture), _symbolTable);
             var suggestions = _engine.Suggest(checkResult, requestCompletions.LinePosition.Character);
             var completionItems = suggestions.Suggestions.Select((item, index) => new CompletionItem(
                 item.DisplayText.Text,

@@ -13,7 +13,7 @@
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1.Added Dataverse Intellisense capability</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Added capability to login into Dataverse using Azure.Identity</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -36,6 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.11.2" />
 		<PackageReference Include="Dumpify" Version="0.6.5" />
 		<PackageReference Include="Microsoft.DotNet.Interactive" Version="1.0.0-beta.24229.4" />
 		<PackageReference Include="Microsoft.DotNet.Interactive.CSharp" Version="1.0.0-beta.24229.4" />

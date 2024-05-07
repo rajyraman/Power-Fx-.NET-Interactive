@@ -41,7 +41,7 @@ namespace PowerFxDotnetInteractive
             if (!Debugger.IsAttached) Debugger.Launch();
 #endif
             _cache = MemoryCache.Default;
-            KernelInfo.LanguageName = "powerfx";
+            KernelInfo.LanguageName = "Power Fx";
             KernelInfo.Description = "This Kernel can evaluate Power Fx snippets.";
             KernelInfo.LanguageVersion = typeof(RecalcEngine).Assembly.GetName().Version.ToString();
             var connectionString = new Option<string>("--connectionString", "Connection string to connect to the Dataverse environment");

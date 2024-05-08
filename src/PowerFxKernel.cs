@@ -81,40 +81,29 @@ namespace PowerFxDotnetInteractive
                     _connections.Add(environmentUrl, currentConnection);
                 }
                 _symbolTable = ReadOnlySymbolTable.Compose(_engine.EngineSymbols, currentConnection.dataverseConnection.Symbols);
-                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code, context).Evaluate(currentConnection.dataverseConnection.SymbolValues);
-                //var lines = submitCode.Code.SplitLines();
-                //foreach (var line in lines)
-                //{
-                //    var result = _engine.EvalAsync(line, default, currentConnection.dataverseConnection.SymbolValues).Result;
-                //    var entityObject = result.ToObject();
-                //    switch (entityObject)
-                //    {
-                //        case IEnumerable<object> e:
-                //            if (!e.Any()) break;
-
-                //            if (e.First() is ExpandoObject)
-                //            {
-                //                context.Display(e, "application/json");
-                //            }
-                //            else
-                //            {
-                //                var o = e.DumpText();
-                //                context.DisplayAs(o, "text/plain");
-                //            }
-                //            break;
-                //        default:
-                //            entityObject.Dump();
-                //            break;
-                //    }
-                //}
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate(currentConnection.dataverseConnection.SymbolValues);
+                PrintResult(context, powerFxResult);
             }
             else
             {
-                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code, context).Evaluate();
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate();
+                PrintResult(context, powerFxResult);
                 _identifiers = PowerFxExpression.Identifiers;
             }
             return Task.CompletedTask;
         }
+
+        private static void PrintResult(KernelInvocationContext context, List<EvalResult> powerFxResult)
+        {
+            powerFxResult.ForEach(x =>
+            {
+                if (string.IsNullOrEmpty(x.MimeType))
+                    context.DisplayAs("Empty result..", "text/plain");
+                else
+                    context.DisplayAs(x.Result, x.MimeType);
+            });
+        }
+
         private async Task<string> GetToken(string environment, ChainedTokenCredential credential, ObjectCache cache)
         {
             //TokenProviderFunction is called multiple times, so we need to check if we already have a token in the cache

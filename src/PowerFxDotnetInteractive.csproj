@@ -7,14 +7,13 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).27</Version>
+		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).1</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Added capability to login into Dataverse using Azure.Identity
-2. Fix Language Name on Kernel</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Changed output rendering</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

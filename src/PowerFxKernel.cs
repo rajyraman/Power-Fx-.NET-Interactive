@@ -134,12 +134,6 @@ namespace PowerFxDotnetInteractive
             return (connectionStringValue, environmentUrl);
         }
 
-        private static void DisplayStateCheck(KernelInvocationContext context, (string name, string result) item)
-        {
-            context.DisplayAs($"### {item.name}", "text/markdown");
-            context.DisplayAs(item.result, "application/json");
-        }
-
         public static bool TryGetValue<T>(string name, out T value)
         {
             var formulaValue = _engine.GetValue(name);

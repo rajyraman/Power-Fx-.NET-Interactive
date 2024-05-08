@@ -1,28 +1,23 @@
-﻿using Microsoft.PowerFx;
-using System;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
+﻿using Dumpify;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.DotNet.Interactive;
+using Microsoft.PowerFx;
 using Microsoft.PowerFx.Types;
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace PowerFxDotnetInteractive
 {
-    public class PowerFxExpression
+    public class PowerFxExpression(RecalcEngine engine, string expression, KernelInvocationContext context)
     {
-        private readonly string[] _assignments = new string[] { "Set", "Collect", "ClearCollect" };
-        private readonly RecalcEngine _engine;
-        private readonly string _expression;
-        public HashSet<(string variable, string formula, string result)> Result { get; set; } = new HashSet<(string variable, string formula, string result)>();
-        public static List<string> _identifiers = new List<string>();
-        public List<string> Identifiers { get => _identifiers; }
-        public HashSet<(string name, string result)> StateCheck { get; set; } = new HashSet<(string name, string result)>();
-        public PowerFxExpression(RecalcEngine engine, string expression)
-        {
-            _engine = engine;
-            _expression = expression ?? throw new ArgumentNullException(nameof(expression));
-        }
-        void EvaluateSingleExpression(string originalExpression, string expression)
+        private readonly string[] _assignments = ["Set", "Collect", "ClearCollect"];
+        public static List<string> _identifiers = [];
+        public static List<string> Identifiers => _identifiers;
+
+        void EvaluateSingleExpression(string originalExpression, string expression, ReadOnlySymbolValues symbolValues = null)
         {
             try
             {
@@ -31,64 +26,76 @@ namespace PowerFxDotnetInteractive
                 // variable assignment: Set or Collect or ClearCollect( <ident>, <expr> )
                 if (match != null)
                 {
-                    var r = _engine.Eval(match.Groups["expr"].Value);
-                    _engine.UpdateVariable(match.Groups["ident"].Value, r);
-                    if(!_identifiers.Contains(match.Groups["ident"].Value))
+                    var result = symbolValues == null ? engine.Eval(match.Groups["expr"].Value) : engine.EvalAsync(match.Groups["expr"].Value, default, symbolValues).Result;
+                    engine.UpdateVariable(match.Groups["ident"].Value, result);
+                    if (!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
-                    Result.Add((match.Groups["ident"].Value, originalExpression, UpdateResult(r)));
+                    DisplayResult(context, result);
                 }
 
                 // formula definition: <ident> = <formula>
                 else if ((match = Regex.Match(expression, @"^\s*(?<ident>\w+)\s*=(?<formula>.*)$")).Success)
                 {
-                    _engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, (string name, FormulaValue newValue)=> 
+                    engine.SetFormula(match.Groups["ident"].Value, match.Groups["formula"].Value, (string name, FormulaValue result)=> 
                     {
-                        SetExpressionResult(originalExpression, newValue);
+                        DisplayResult(context, result);
                     });
                     if (!_identifiers.Contains(match.Groups["ident"].Value))
                         _identifiers.Add(match.Groups["ident"].Value);
-                    Result.Add((match.Groups["ident"].Value, expression, match.Groups["formula"].Value));
                 }
 
                 // eval and print everything else, unless empty lines and single line comment (which do nothing)
                 else if (!Regex.IsMatch(expression, @"^\s*//") && Regex.IsMatch(expression, @"\w"))
                 {
-                    var result = _engine.Eval(expression);
-
-                    SetExpressionResult(originalExpression, result);
+                    var result = symbolValues == null ? engine.Eval(expression) : engine.EvalAsync(expression, default, symbolValues).Result;
+                    DisplayResult(context, result);
                 }
             }
             catch(InvalidOperationException ex)
             {
-                Result.Add(("",originalExpression, ex.Message));
+                context.DisplayStandardError(ex.Message);
             }
         }
 
-        private void SetExpressionResult(string expression, FormulaValue result)
+        private static void DisplayResult(KernelInvocationContext context, FormulaValue result)
         {
-            if (result is ErrorValue errorValue)
-                Result.Add(("", expression, @$"{{""Error"": ""{errorValue.Errors[0].Message}""}}"));
-            else
-                Result.Add(("", expression, UpdateResult(result)));
+            var entityObject = result.ToObject();
+            switch (entityObject)
+            {
+                case IEnumerable<object> e:
+                    if (!e.Any()) break;
+
+                    if (e.First() is ExpandoObject)
+                    {
+                        context.Display(e, "application/json");
+                    }
+                    else
+                    {
+                        context.DisplayAs(e.DumpText(), "text/plain");
+                    }
+                    break;
+                default:
+                    context.DisplayAs(entityObject.DumpText(), "text/plain");
+                    break;
+            }
         }
 
-        public PowerFxExpression Evaluate()
+        public PowerFxExpression Evaluate(ReadOnlySymbolValues symbolValues = null)
         {
             string[] expressions = null;
-            if (_expression.Contains(";"))
+            if (expression.Contains(';'))
             {
-                expressions = _expression.Split($";\n");
+                expressions = expression.Split($";\n");
             }
             else
-                expressions = _expression.Split("\n");
+                expressions = expression.Split("\n");
             if (expressions.Length == 1)
-                expressions = _expression.Split($";\r\n");
+                expressions = expression.Split($";\r\n");
             foreach (var expression in expressions)
             {
                 var cleanedExpression = string.Join("",expression.Trim().Split("\n")).TrimEnd(';');
-                EvaluateSingleExpression(expression, cleanedExpression);
+                EvaluateSingleExpression(expression, cleanedExpression, symbolValues);
             }
-            StateCheck = _identifiers.Select(x => (name: x, currentValue: UpdateResult(_engine.GetValue(x)))).ToHashSet();
             return this;
         }
 
@@ -140,7 +147,7 @@ namespace PowerFxDotnetInteractive
                     resultString = $@"""{str.ToObject()}""";
                     break;
                 case UntypedObjectValue uov:
-                    resultString = uov.ToString();
+                    resultString = $@"""{uov}""";
                     break;
                 case FormulaValue fv:
                     resultString = fv.ToObject()?.ToString();

@@ -4,21 +4,21 @@ using Dumpify;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.PowerFx;
 using Microsoft.PowerFx.Dataverse;
 using Microsoft.PowerFx.Intellisense;
-using Microsoft.PowerFx.Syntax;
 using Microsoft.PowerFx.Types;
 using Microsoft.PowerPlatform.Dataverse.Client;
-using Microsoft.Xrm.Sdk;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Runtime.Caching;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -52,7 +52,6 @@ namespace PowerFxDotnetInteractive
             Root.AddDirective(runPowerFxDataverseCommand);
             _engine = engine;
         }
-
         public static RecalcEngine GetRecalcEngine() => _engine;
 
         public Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
@@ -82,32 +81,37 @@ namespace PowerFxDotnetInteractive
                     _connections.Add(environmentUrl, currentConnection);
                 }
                 _symbolTable = ReadOnlySymbolTable.Compose(_engine.EngineSymbols, currentConnection.dataverseConnection.Symbols);
-                var result = _engine.EvalAsync(submitCode.Code, default, currentConnection.dataverseConnection.SymbolValues).Result;
-                var entityObject = result.ToObject();
-                var entityText = entityObject.DumpText();
-                context.DisplayAs(entityText, "text/plain");
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code, context).Evaluate(currentConnection.dataverseConnection.SymbolValues);
+                //var lines = submitCode.Code.SplitLines();
+                //foreach (var line in lines)
+                //{
+                //    var result = _engine.EvalAsync(line, default, currentConnection.dataverseConnection.SymbolValues).Result;
+                //    var entityObject = result.ToObject();
+                //    switch (entityObject)
+                //    {
+                //        case IEnumerable<object> e:
+                //            if (!e.Any()) break;
+
+                //            if (e.First() is ExpandoObject)
+                //            {
+                //                context.Display(e, "application/json");
+                //            }
+                //            else
+                //            {
+                //                var o = e.DumpText();
+                //                context.DisplayAs(o, "text/plain");
+                //            }
+                //            break;
+                //        default:
+                //            entityObject.Dump();
+                //            break;
+                //    }
+                //}
             }
             else
             {
-                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate();
-                _identifiers = powerFxResult.Identifiers;
-
-                var result = powerFxResult.Result.Select(x => $"<tr><td>{x.formula.FormatInput()}</td><td>{x.result.FormatOutput()}</td>");
-                var stateCheckResult = powerFxResult.StateCheck.Select(x => $"<tr><td>{x.name.FormatInput()}</td><td>{x.result.FormatOutput()}</td></tr>");
-                var stateCheckMarkdown = $"<tr><th>Variable</th><th>Result</th></tr>{string.Join("\n", stateCheckResult)}";
-                if (submitCode.Code == "?")
-                {
-                    context.DisplayAs(stateCheckMarkdown.Table(), "text/markdown");
-                    foreach (var item in powerFxResult.StateCheck)
-                    {
-                        DisplayStateCheck(context, item);
-                    }
-                }
-                else
-                {
-                    var evaluationMarkdown = $"<tr><th>Expression</th><th>Result</th></tr>{"\n"}{string.Join("\n", result)}";
-                    context.DisplayAs(evaluationMarkdown.Table(), "text/markdown");
-                }
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code, context).Evaluate();
+                _identifiers = PowerFxExpression.Identifiers;
             }
             return Task.CompletedTask;
         }
@@ -147,7 +151,7 @@ namespace PowerFxDotnetInteractive
             context.DisplayAs(item.result, "application/json");
         }
 
-        public bool TryGetValue<T>(string name, out T value)
+        public static bool TryGetValue<T>(string name, out T value)
         {
             var formulaValue = _engine.GetValue(name);
             if(formulaValue != null)

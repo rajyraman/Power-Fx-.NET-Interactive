@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "streetsidesoftware.code-spell-checker",
+        "ms-dotnettools.csharp",
+        "randomfractalsinc.vscode-data-table",
+        "ms-dotnettools.dotnet-interactive-vscode",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "microsoft-IsvExpTools.powerplatform-vscode",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-renderers"
+    ]
+}

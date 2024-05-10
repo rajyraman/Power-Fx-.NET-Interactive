@@ -136,26 +136,12 @@ namespace PowerFxDotnetInteractive
             return (connectionStringValue, environmentUrl);
         }
 
-        public static bool TryGetValue<T>(string name, out T value)
-        {
-            var formulaValue = _engine.GetValue(name);
-            if(formulaValue != null)
-            {
-                value = (T)formulaValue.ToObject();
-                if (value is IEnumerable<object>)
-                    value = (T)(object)JsonSerializer.Serialize<dynamic>(value);
-                return true;
-            }
-
-            value = default;
-            return false;
-        }
-
         Task IKernelCommandHandler<RequestValue>.HandleAsync(RequestValue command, KernelInvocationContext context)
         {
-            if (TryGetValue<object>(command.Name, out var value))
+            var value = _engine.GetValue(command.Name);
+            if (value != null)
             {
-                context.PublishValueProduced(command, value);
+                context.PublishValueProduced(command, value.ToObject());
             }
             else
             {

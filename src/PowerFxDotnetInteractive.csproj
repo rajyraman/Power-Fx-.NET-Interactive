@@ -7,13 +7,14 @@
 		<IsPackable>true</IsPackable>
 		<PackageDescription>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</PackageDescription>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).5</Version>
+		<Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd')).9</Version>
 		<Authors>Natraj Yegnaraman</Authors>
 		<Product>PowerFx.NET.Interactive</Product>
 		<PackageId>PowerFx.NET.Interactive</PackageId>
 		<Description>This is a Kernel extension for Polyglot Notebooks that helps you to run Power Fx code</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReleaseNotes>1. Update marshalling logic to infer types. Collection sharing from C# to Power Fx now works as a result.</PackageReleaseNotes>
+		<PackageReleaseNotes>1. Update marshalling logic to infer types. Collection sharing from C# to Power Fx now works as a result.
+		2. Update sharing logic when variable is shared from Power Fx to other kernels</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rajyraman/Power-Fx-.NET-Interactive</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>

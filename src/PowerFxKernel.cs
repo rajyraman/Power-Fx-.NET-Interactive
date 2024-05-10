@@ -15,6 +15,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
+using System.Drawing;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -32,6 +33,7 @@ namespace PowerFxDotnetInteractive
         private static ObjectCache _cache;
         private static ReadOnlySymbolTable _symbolTable;
         private static Dictionary<string,(ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
+        private static TypeMarshallerCache _typeMarshallerCache = new();
 
         private List<string> _identifiers;
 
@@ -169,42 +171,9 @@ namespace PowerFxDotnetInteractive
 
             static Task SetAsync(string name, object value, Type declaredType)
             {
-                switch (value)
-                {
-                    case string v:
-                        _engine.UpdateVariable(name, name.EndsWith("json", StringComparison.InvariantCultureIgnoreCase) || (v.StartsWith("{") && v.EndsWith("}")) ? FormulaValueJSON.FromJson(v) : FormulaValue.New(v));
-                        break;
-                    case bool v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case decimal v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case DateTime v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case double v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case float v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case Guid v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case int v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case long v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    case TimeSpan v:
-                        _engine.UpdateVariable(name, v);
-                        break;
-                    default:
-                        _engine.UpdateVariable(name, PrimitiveWrapperAsUnknownObject.New(value));
-                        break;
-                }
+                var marshalledFV = _typeMarshallerCache.Marshal(value, value.GetType());
+                var result = _engine.Eval($"{marshalledFV.ToExpression()}");
+                _engine.UpdateVariable(name, result);
                 return Task.CompletedTask;
             }
         }

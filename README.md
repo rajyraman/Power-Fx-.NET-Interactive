@@ -22,3 +22,17 @@ You can find the [Power Fx Notebook](./notebooks/PowerFx.ipynb) in the notebooks
 ## Credits
 
 1. [Power Fx Host Sample](https://github.com/microsoft/power-fx-host-samples) for the parsing code.
+
+
+## want to build by yourself
+
+add PowerFX daily build nuget source by creating NuGet.Config on the src/ folder
+https://github.com/microsoft/Power-Fx?tab=readme-ov-file#daily-builds
+https://github.com/microsoft/Power-Fx/blob/main/dailyBuilds.md#connect-to-the-feed
+
+```
+dotnet restore src/PowerFxDotnetInteractive.csproj
+dotnet build src/PowerFxDotnetInteractive.csproj --no-restore
+dotnet test src/PowerFxDotnetInteractive.csproj --no-build --verbosity normal
+dotnet pack src/PowerFxDotnetInteractive.csproj --configuration Debug --output nupkg/
+```

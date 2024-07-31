@@ -1,0 +1,104 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: |
+          dotnet restore src/PowerFxDotnetInteractive.csproj
+      - name: Build
+        run: |
+          dotnet build src/PowerFxDotnetInteractive.csproj --no-restore
+      - name: Test
+        run: |
+          dotnet test src/PowerFxDotnetInteractive.csproj --no-build --verbosity normal
+      - name: Package
+        run: |
+          dotnet pack src/PowerFxDotnetInteractive.csproj --configuration Debug --output nupkg/
+
+      - name: Set tag name
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" != "push" ]]; then
+            tag=v$(date +%Y%m%d.%H%M%S)
+          else
+            tag=v$(date +%Y%m%d.%H%M%S)
+          fi
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        id: create_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          tag_name="$tag"  # Replace with your desired tag name
+          release_name="Release $tag"  # Replace with your desired release name
+          body="Release notes for version $tag"  # Replace with your release notes
+          gh release create $tag_name -t "$release_name" -n "$body"
+        
+      - name: Upload package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls src/
+          ls nukpg/
+          gh release upload $tag_name ./nupkg/PowerFx.NET.Interactive.2024.6.30.9.nupkg
+
+
+          
+      #dotnet nuget push /home/runner/work/Power-Fx-.NET-Interactive/Power-Fx-.NET-Interactive/src/bin/Debug/PowerFx.NET.Interactive.2024.6.28.9.nupkg -k $env:nuget -s https://api.nuget.org/v3/index.json
+        #          gh release upload $tag_name '/home/runner/work/Power-Fx-.NET-Interactive/Power-Fx-.NET-Interactive/nupkg/PowerFx.NET.Interactive.2024.6.30.9.nupkg'
+
+      # - name: Publish to Github Releases
+      #   run: |
+      #     cd src
+      #     gh issue comment $ISSUE --body "Thank you for opening this issue!"
+
+      # - name: Set tag name
+      #   id: tag
+      #   run: |
+      #     if [[ "${{ github.event_name }}" != "push" ]]; then
+      #       tag=v$(date +%Y%m%d.%H%M%S)
+      #     else
+      #       tag=$(basename "${{ github.ref }}")
+      #     fi
+      #     echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      # - name: Create a Release
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #     GH_REPO: ${{ github.repository }}
+      #   run: |
+      #     tag="${{ steps.tag.outputs.tag }}"
+      #     gh release create --draft=true "$tag" --title "$tag"
+
+      # - name: Upload file to the Release
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #     GH_REPO: ${{ github.repository }}
+      #   run: gh release upload "${{ needs.release.outputs.tag }}" /home/runner/work/Power-Fx-.NET-Interactive/Power-Fx-.NET-Interactive/src/bin/Debug/PowerFx.NET.Interactive.2024.6.28.9.nupkg
+
+      # - name: Publish the Release
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #     GH_REPO: ${{ github.repository }}
+      #   run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false

@@ -3,6 +3,10 @@ PowerFx Kernel for Polyglot Notebooks (previous known as .NET Interactive Notebo
 
 This is a kernel for [Polyglot Notebooks](https://github.com/dotnet/interactive) to help people learn [Power Fx](https://github.com/microsoft/Power-Fx).
 
+## Known issues
+
+<ins>This kernel does not work with the latest version of Polyglot Notebook</ins>. The latest version as of 16-Nov-2024 is 1.0.5565010. It works with **v1.0.5229040**. So, make sure that you install this specific version of the Polyglot Notebooks extension.
+
 ## Install .NET and Tools
 
 1. [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)

@@ -1,4 +1,5 @@
-﻿using Azure.Identity;
+﻿using Azure.Core;
+using Azure.Identity;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Directives;
@@ -26,6 +27,7 @@ namespace PowerFxDotnetInteractive
         private static RecalcEngine _engine;
         private static ObjectCache _cache;
         private static ReadOnlySymbolTable _symbolTable;
+        private static Dictionary<string, (ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
         private static TypeMarshallerCache _typeMarshallerCache = new();
 
         private List<string> _identifiers;
@@ -57,24 +59,26 @@ namespace PowerFxDotnetInteractive
             if (parentCode != null && parentCode.Code.StartsWith("#!dataverse-powerfx"))
             {
                 var (connectionStringValue, environmentUrl) = GetEnvironmentUrl(submitCode, parentCode);
-                var loggerFactory = LoggerFactory.Create(b => b.AddSimpleConsole());
-                var logger = loggerFactory.CreateLogger("dataverse");
-                var client = AzAuth.CreateServiceClient(new ConnectionOptions
+                if (!_connections.TryGetValue(environmentUrl, out (ServiceClient serviceClient, DataverseConnection dataverseConnection) currentConnection))
                 {
-                    ServiceUri = new Uri(environmentUrl),
-                    RequireNewInstance = true,
-                    Logger = logger
-                },
-                credentialOptions: new DefaultAzureCredentialOptions
-                {
-                    ExcludeEnvironmentCredential = true,
-                    ExcludeManagedIdentityCredential = true,
-                    ExcludeSharedTokenCacheCredential = true,
-                    ExcludeWorkloadIdentityCredential = true,
-                });
-                var dataverseConnection = SingleOrgPolicy.New(client);
-                _symbolTable = ReadOnlySymbolTable.Compose(_engine.EngineSymbols, dataverseConnection.Symbols);
-                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate(dataverseConnection.SymbolValues);
+                    var client = !string.IsNullOrEmpty(connectionStringValue) ? new ServiceClient(connectionStringValue) : new ServiceClient(
+                                    tokenProviderFunction: async f => await GetToken(environmentUrl,
+                                    new ChainedTokenCredential(
+                                        new AzureCliCredential(),
+                                        new VisualStudioCodeCredential(),
+                                        new VisualStudioCredential(),
+                                        new AzurePowerShellCredential(),
+                                        new InteractiveBrowserCredential()),
+                                    _cache),
+                                    useUniqueInstance: true,
+                                    instanceUrl: new Uri(environmentUrl)){ EnableAffinityCookie = false, UseWebApi = false};
+                    var dataverseConnection = SingleOrgPolicy.New(client);
+                    _engine.EnableDelegation(1000);
+                    currentConnection = (client, dataverseConnection);
+                    _connections.Add(environmentUrl, currentConnection);
+                }
+                _symbolTable = ReadOnlySymbolTable.Compose(_engine.EngineSymbols, currentConnection.dataverseConnection.Symbols);
+                var powerFxResult = new PowerFxExpression(_engine, submitCode.Code).Evaluate(currentConnection.dataverseConnection.SymbolValues);
                 PrintResult(context, powerFxResult);
             }
             else
@@ -95,6 +99,18 @@ namespace PowerFxDotnetInteractive
                 else
                     context.DisplayAs(x.Result, x.MimeType);
             });
+        }
+
+        private async Task<string> GetToken(string environment, ChainedTokenCredential credential, ObjectCache cache)
+        {
+            //TokenProviderFunction is called multiple times, so we need to check if we already have a token in the cache
+            var accessToken = cache.Get(environment);
+            if (accessToken == null)
+            {
+                accessToken = (await credential.GetTokenAsync(new TokenRequestContext(new[] { $"{environment}/.default" })));
+                cache.Set(environment, accessToken, new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(50) });
+            }
+            return ((AccessToken)accessToken).Token;
         }
 
         private static (string connectionStringValue, string environmentUrl) GetEnvironmentUrl(SubmitCode submitCode, SubmitCode parentCode)

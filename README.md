@@ -12,8 +12,9 @@ This is a kernel for [Polyglot Notebooks](https://github.com/dotnet/interactive)
 ## Building the repo
 
 Add PowerFx Daily Build Nuget information by creating NuGet.Config on the src/ folder
-https://github.com/microsoft/Power-Fx?tab=readme-ov-file#daily-builds
-https://github.com/microsoft/Power-Fx/blob/main/dailyBuilds.md#connect-to-the-feed
+
+- https://github.com/microsoft/Power-Fx?tab=readme-ov-file#daily-builds
+- https://github.com/microsoft/Power-Fx/blob/main/dailyBuilds.md#connect-to-the-feed
 
 You can then build the csproj like any other dotnet project in Release or Debug mode.
 

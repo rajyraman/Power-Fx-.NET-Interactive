@@ -1,27 +1,22 @@
 ﻿using Azure.Core;
 using Azure.Identity;
-using Dumpify;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Directives;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.Extensions.Logging;
 using Microsoft.PowerFx;
 using Microsoft.PowerFx.Dataverse;
 using Microsoft.PowerFx.Intellisense;
-using Microsoft.PowerFx.Types;
 using Microsoft.PowerPlatform.Dataverse.Client;
+using Microsoft.PowerPlatform.Dataverse.Client.Model;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
-using System.Drawing;
-using System.Dynamic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Runtime.Caching;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -32,7 +27,7 @@ namespace PowerFxDotnetInteractive
         private static RecalcEngine _engine;
         private static ObjectCache _cache;
         private static ReadOnlySymbolTable _symbolTable;
-        private static Dictionary<string,(ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
+        private static Dictionary<string, (ServiceClient serviceClient, DataverseConnection dataverseConnection)> _connections = new();
         private static TypeMarshallerCache _typeMarshallerCache = new();
 
         private List<string> _identifiers;
@@ -46,12 +41,12 @@ namespace PowerFxDotnetInteractive
             KernelInfo.LanguageName = "Power Fx";
             KernelInfo.Description = "This Kernel can evaluate Power Fx snippets.";
             KernelInfo.LanguageVersion = typeof(RecalcEngine).Assembly.GetName().Version.ToString();
-            var connectionString = new Option<string>("--connectionString", "Connection string to connect to the Dataverse environment");
-            connectionString.AddAlias("-c");
-            var environment = new Option<string>("--environment", "Environment URL of the Dataverse environment");
-            environment.AddAlias("-e");
-            var runPowerFxDataverseCommand = new Command("#!dataverse-powerfx", "Run a Power Fx query on the Dataverse environment") { connectionString, environment };
-            Root.AddDirective(runPowerFxDataverseCommand);
+            var connectionString = new KernelDirectiveParameter("--connectionString", "Connection string to connect to the Dataverse environment");
+            var environment = new KernelDirectiveParameter("--environment", "Environment URL of the Dataverse environment");
+            var runPowerFxDataverseCommand = new KernelActionDirective("#!dataverse-powerfx") { Description = "Run a Power Fx query on the Dataverse environment", Parameters = [connectionString, environment] };
+            Root.AddDirective(runPowerFxDataverseCommand, (_, _) => Task.CompletedTask);
+            //var runPowerFxDataverseCommand = new Command("#!dataverse-powerfx", "Run a Power Fx query on the Dataverse environment") { connectionString, environment };
+            //Root.AddDirective(runPowerFxDataverseCommand);
             _engine = engine;
         }
         public static RecalcEngine GetRecalcEngine() => _engine;
@@ -67,16 +62,16 @@ namespace PowerFxDotnetInteractive
                 if (!_connections.TryGetValue(environmentUrl, out (ServiceClient serviceClient, DataverseConnection dataverseConnection) currentConnection))
                 {
                     var client = !string.IsNullOrEmpty(connectionStringValue) ? new ServiceClient(connectionStringValue) : new ServiceClient(
-                                    tokenProviderFunction: async f => await GetToken(environmentUrl, 
+                                    tokenProviderFunction: async f => await GetToken(environmentUrl,
                                     new ChainedTokenCredential(
-                                        new AzureCliCredential(), 
-                                        new VisualStudioCodeCredential(), 
-                                        new VisualStudioCredential(), 
-                                        new AzurePowerShellCredential(), 
-                                        new InteractiveBrowserCredential()), 
+                                        new AzureCliCredential(),
+                                        new VisualStudioCodeCredential(),
+                                        new VisualStudioCredential(),
+                                        new AzurePowerShellCredential(),
+                                        new InteractiveBrowserCredential()),
                                     _cache),
                                     useUniqueInstance: true,
-                                    instanceUrl: new Uri(environmentUrl));
+                                    instanceUrl: new Uri(environmentUrl)){ EnableAffinityCookie = false, UseWebApi = false};
                     var dataverseConnection = SingleOrgPolicy.New(client);
                     _engine.EnableDelegation(1000);
                     currentConnection = (client, dataverseConnection);
@@ -121,17 +116,17 @@ namespace PowerFxDotnetInteractive
         private static (string connectionStringValue, string environmentUrl) GetEnvironmentUrl(SubmitCode submitCode, SubmitCode parentCode)
         {
             var originalCode = parentCode.Code.Replace(submitCode.Code, "").Replace(@"""", "");
-            var connectionStringIndex = originalCode.IndexOf("-c");
+            var connectionStringIndex = originalCode.IndexOf("--connectionString");
             var connectionStringValue = "";
             string environmentUrl;
             if (connectionStringIndex != -1)
             {
-                connectionStringValue = originalCode[connectionStringIndex..].Replace(@"-c", "").Trim();
+                connectionStringValue = originalCode[connectionStringIndex..].Replace(@"--connectionString", "").Trim();
                 environmentUrl = UrlRegex().Matches(connectionStringValue).First().Value;
             }
             else
             {
-                environmentUrl = originalCode[originalCode.IndexOf("-e")..].Replace(@"-e", "").Trim();
+                environmentUrl = originalCode[originalCode.IndexOf("--environment")..].Replace(@"--environment", "").Trim();
             }
             return (connectionStringValue, environmentUrl);
         }
@@ -172,11 +167,11 @@ namespace PowerFxDotnetInteractive
             var suggestions = _engine.Suggest(checkResult, requestCompletions.LinePosition.Character);
             var completionItems = suggestions.Suggestions.Select((item, index) => new CompletionItem(
                 item.DisplayText.Text,
-                GetCompletionItemKind(item.Kind), 
-                sortText: index.ToString("D3", CultureInfo.InvariantCulture)) 
-            { 
+                GetCompletionItemKind(item.Kind),
+                sortText: index.ToString("D3", CultureInfo.InvariantCulture))
+            {
                 Documentation = item.Definition
-            });
+            }).ToList();
 
             completion = new CompletionsProduced(
                 completionItems,
